@@ -1,8 +1,7 @@
-#include <pathfindingTeensy32.h>
+#include <pathfindingteensy32.h>
 #include <deplacement.h>
 #include <YDLidar.h>
-//v2
-//deplacement scotch
+
 AccelStepper motor_G(1, step_G, dir_G);//declaration du moteur gauche
 AccelStepper motor_D(1, step_D, dir_D);//declatation du moteur droit
 
@@ -17,7 +16,9 @@ noeud positionCourante;
 noeud pospre;
 noeud posdeb;
 noeud listeCheminNouveau[150];
-
+noeud arrive;
+uint8_t table2020[150][100];
+uint8_t nbrnoeud1;
 
 
 bool isScanning=false;
@@ -111,11 +112,11 @@ void setup(){
 
   posdeb.x=50;
   posdeb.y=50;
-  table[50][50]=2;
-  table[100][100]=3;
+  table2020[50][50]=2;
+  table2020[100][50]=3;
   pospre=posdeb;
-  objectif.x=100;
-  objectif.y=100;
+  arrive.x=100;
+  arrive.y=100;
 
 
 }
@@ -135,9 +136,9 @@ void loop() {
         int posxenemi= distance*cos(angle);
         int posyenemi= distance*sin(angle);
         posEnemi(posxenemi,posyenemi);
-        algoPAstar(table, objectif, positionCourante);
-        listeCheminNouveau[nbrnoeud] = cheminRobot();
-        for(int i =0;i<nbrnoeud;i++){
+        nbrnoeud1=algoPAstar(table2020, arrive, positionCourante);
+        listeCheminNouveau[nbrnoeud1] = cheminRobot();
+        for(int i =0;i<nbrnoeud1;i++){
 
           go = (int)sqrt((double)pow((listeCheminNouveau[i].x-positionCourante.x),2)+pow((listeCheminNouveau[i].y-positionCourante.y),2));
 

@@ -1,18 +1,34 @@
-#include <pathfindingTeensy32.h>
+#include "pathfindingteensy32.h"
+uint8_t table[150][100];
 
-void affichetab(){
-  //Serial.print("b");
-  for(int i=0;i<100;i++){
-    for(int j=0;j<150;j++){
-      Serial.print(table[j][i]);
-    }
-    Serial.println();
-  }
-}
+noeud listeRetenue[250]; //liste retenue de noeud
+noeud listeAttente[3];
+noeud n1;
+noeud n2;
+noeud n3;
+
+noeud noeudcourant;
+noeud posrobot;
+noeud objectif;
+noeud noeudparent;
+
+float pente;
+float b;
+uint8_t dir;
+uint8_t noeudfaux=0;
+uint8_t nbrnoeud;
+
+uint8_t xcourant;
+uint8_t ycourant;
+
+float t1;
+float ttot;
+float pente1;
+float pente2;
+float pente3;
 
 void initTable(){
   //definition des tassots sur la table2020 et initialise le tableau
-
   for (int  i=93;i<100;i++){
     table[45][i]=1;
     table[46][i]=1;
@@ -29,19 +45,14 @@ void initTable(){
   }
 }
 
-void algoPAstar(uint8_t table[150][100], noeud objectif, noeud depart){
+uint8_t algoPAstar(uint8_t table[150][100], noeud objectif, noeud depart){
   nbrnoeud++;
 
   int j;
   noeudfaux=0;
 
   pente = ((float)(objectif.y-depart.y) /(float) (objectif.x-depart.x))*10.0;
-  /*Serial.println(pente);
-  Serial.println();
-  Serial.println(objectif.x);
-  Serial.println(objectif.y);
-  Serial.println(depart.x);
-  Serial.println(depart.y);*/
+
   if((pente==0.0&&objectif.x>depart.x)||(pente>=-1.0&&pente<=1.0&&objectif.x>depart.x))dir=6; // pile a droite
   if((pente==0.0&&objectif.x<depart.x)||(pente>=-1.0&&pente<=1.0&&objectif.x<depart.x))dir=7; //pile a gauche
   if(pente>1000&&objectif.y<depart.y)dir=0; //cas ou l'objectif est au dessus du robot dans l'axe des y (pente infini)
@@ -50,7 +61,6 @@ void algoPAstar(uint8_t table[150][100], noeud objectif, noeud depart){
   if(-pente>1&&objectif.x<depart.x)dir=3; //cas ou l'objectif est en bas à gauche du robot
   if(-pente<1&&objectif.x>depart.x)dir=4; //cas ou l'objectif est bas à droite du robot
   if(-pente<1&&objectif.x<depart.x)dir=5; //cas ou l'objectif est en haut à gauche du robot
-
 
   //Serial.println(dir);
   choixdir(dir,objectif,depart);
@@ -61,6 +71,7 @@ void algoPAstar(uint8_t table[150][100], noeud objectif, noeud depart){
 
       noeudfaux++;
     }
+
   }
   switch(noeudfaux){
     case 0:
@@ -117,11 +128,7 @@ void algoPAstar(uint8_t table[150][100], noeud objectif, noeud depart){
     break;
   }
 
-
   table[listeRetenue[nbrnoeud].x][listeRetenue[nbrnoeud].y]=4;
-
-
-
 
   if((listeRetenue[nbrnoeud].x!=objectif.x)||(listeRetenue[nbrnoeud].y!=objectif.y)){
     /*Serial.println(listeRetenue[nbrnoeud].x);
@@ -132,13 +139,9 @@ void algoPAstar(uint8_t table[150][100], noeud objectif, noeud depart){
     algoPAstar(table,objectif,listeRetenue[nbrnoeud]);
     //Serial.println(nbrnoeud);
 
-
   }
 //Serial.println(nbrnoeud);
-
-
-
-
+return nbrnoeud;
 }
 
 void triliste(noeud liste[3]){
@@ -325,54 +328,56 @@ table[posx+8][i]=6;
 }*/
 }
 
-void cheminRobot(){
-  Serial.println("chemin");
-
+noeud cheminRobot(){
+noeud listechemin[150];
   for(int i=3;i<250;i++){
     if(listeRetenue[i].x==0)i=250;
-    // pente1=((float)(&listeRetenue[i].y-&listeRetenue[i-1].y)/(float)(&listeRetenue[i].x-&listeRetenue[i-1].x));
-    // pente2=((float)(&listeRetenue[i-2].y-&listeRetenue[i-3].y)/(float) (&listeRetenue[i-2].x-&listeRetenue[i-3].x));
-    // pente3=((float)(&listeRetenue[i+1].y-&listeRetenue[i].y)/(float) (&listeRetenue[i+1].x-&listeRetenue[i].x));
     if(((listeRetenue[i+1].x-listeRetenue[i].x)==0))//cas d'un changement à 90°
     {
       if(((listeRetenue[i].x-listeRetenue[i-1].x)!=0))
       {
-        Serial.println(listeRetenue[i].x);
-        Serial.println(listeRetenue[i].y);
-        Serial.println("coucou");
-        Serial.println("cas0");
+        // Serial.println(listeRetenue[i].x);
+        // Serial.println(listeRetenue[i].y);
+        // Serial.println("coucou");
+        // Serial.println("cas0");
+        listechemin[i]=listeRetenue[i];
       }
     }
     if(((listeRetenue[i-1].x-listeRetenue[i-2].x)==0))// passage de 90° vers pente non nulle ou non infini
     {
       if(((listeRetenue[i+1].y-listeRetenue[i].y)==0))
       {
-        Serial.println(listeRetenue[i].x);
-        Serial.println(listeRetenue[i].y);
-        Serial.println("coucou");
-        Serial.println("cas1");
+        // Serial.println(listeRetenue[i].x);
+        // Serial.println(listeRetenue[i].y);
+        // Serial.println("coucou");
+        // Serial.println("cas1");
+        listechemin[i]=listeRetenue[i];
       }
     }
     if(((listeRetenue[i].y-listeRetenue[i-1].y)==0)&&((listeRetenue[i-1].y-listeRetenue[i-2].y)==0))//cas où l'algo essaie de suivre la ligne droite entre depart et arrivé
     { if(((listeRetenue[i+1].y-listeRetenue[i].y)!=0)&&((listeRetenue[i+2].y-listeRetenue[i+1].y)!=0))
       {
-        Serial.println(listeRetenue[i].x);
-        Serial.println(listeRetenue[i].y);
-        Serial.println("coucou");
-        Serial.println("cas2");
+        // Serial.println(listeRetenue[i].x);
+        // Serial.println(listeRetenue[i].y);
+        // Serial.println("coucou");
+        // Serial.println("cas2");
+        listechemin[i]=listeRetenue[i];
       }
     }
     if(((listeRetenue[i-2].y-listeRetenue[i-1].y)==0)&&((listeRetenue[i].y-listeRetenue[i-1].y)!=0))//
     { if((listeRetenue[i+5].y-listeRetenue[i].y)==0)
       {
-        Serial.println(listeRetenue[i].x);
-        Serial.println(listeRetenue[i].y);
-        Serial.println("coucou");
-        Serial.println("cas3");
+        // Serial.println(listeRetenue[i].x);
+        // Serial.println(listeRetenue[i].y);
+        // Serial.println("coucou");
+        // Serial.println("cas3");
+        listechemin[i]=listeRetenue[i];
       }
     }
   }
-  Serial.println(listeRetenue[nbrnoeud].x);
-  Serial.println(listeRetenue[nbrnoeud].y);
-  Serial.println("coucou");
+  // Serial.println(listeRetenue[nbrnoeud].x);
+  // Serial.println(listeRetenue[nbrnoeud].y);
+  // Serial.println("coucou");
+  listechemin[nbrnoeud]=listeRetenue[nbrnoeud];
+  return * listechemin;
 }
