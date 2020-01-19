@@ -27,11 +27,11 @@ typedef struct{ //struture pour enregistrer les x et y en même temps
 
 
 
-#define acceleration  5000//accélération du robot x 2coéficient_go
+#define acceleration  5500//accélération du robot x 2coéficient_go
 #define speed         1000
 
-#define coeficien_turn /*12.99399105*/  -4.081256839 //coefficiant determiné par rapport au diamètre de roue, sélection du pas(ici 1/4),le tout pour 1°
-#define coeficien_go  -4.65705559 //coefficiant determiné par rapport au diamètre de roue, sélection du pas(ici 1/4),le tout pour 1mm
+#define coeficien_turn /*12.99399105*/  -498.2241697 //coefficiant determiné par rapport au diamètre de roue, sélection du pas,le tout pour 1°
+#define coeficien_go  -4.65705559 //coefficiant determiné par rapport au diamètre de roue, sélection du pas,le tout pour 1mm
 
 #define pi 3.1415926536//
 

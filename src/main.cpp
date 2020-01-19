@@ -49,7 +49,7 @@ void setup(){
   lidar.getDeviceInfo(info, 100);
   digitalWrite(RPLIDAR_MOTOR,HIGH);
   lidar.startScan();
-  initTable();
+  initTable(table2020);
   //initialisation du moteur gauche
   pinMode(reset_G, OUTPUT);    //le resete se fait a l'aita bas
   digitalWrite(reset_G, HIGH);
@@ -77,6 +77,10 @@ void setup(){
   arrive.x=100;
   arrive.y=50;
 
+  go = (int)sqrt((double)pow((arrive.x*20-posdeb.x*20),2)+pow((arrive.y*20-posdeb.y*20),2));
+  pas=(long)(coeficien_go*(float)(go*5));
+  motor_D.move(pas);//activation de la rotation jusque cette valeur de pas moteur droite
+  motor_G.move(-pas);
 
 }
 
@@ -88,66 +92,70 @@ void loop() {
  positionrobot.y = pospre.y + r + sin(alpha);
 
 
-  pospre.x=r+cos(alpha);
-  pospre.y=r+sin(alpha);
-  go = (int)sqrt((double)pow((arrive.x*20-posdeb.x*20),2)+pow((arrive.y*20-posdeb.y*20),2));
-  pas=(long)(coeficien_go*(float)(go));
-  motor_D.move(pas);//activation de la rotation jusque cette valeur de pas moteur droite
-  motor_G.move(-pas);
+ pospre.x=r+cos(alpha);
+ pospre.y=r+sin(alpha);
 
-if (IS_OK(lidar.waitPoint())) {
-  if(motor_D.isRunning()){
-      float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
-      float angle  = lidar.getCurrentPoint().angle; //anglue value in degrees
 
-      if(((360-15)<angle||angle<=15)&&distance<300&&distance!=0){//détection
+ if (IS_OK(lidar.waitPoint())) {
+   if(motor_D.isRunning()){
+     float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
+     float angle  = lidar.getCurrentPoint().angle; //anglue value in degrees
 
-        motor_D.stop();
-        motor_G.stop();
+     if(((360-15)<angle||angle<=15)&&distance<300&&distance!=0){//détection
 
-        int posxenemi= distance*cos(angle);
-        int posyenemi= distance*sin(angle);
-        posEnemi(posxenemi,posyenemi);
-        nbrnoeud1=algoPAstar(table2020, arrive, positionrobot);
-        listeCheminNouveau[nbrnoeud1] = cheminRobot();
-        for(int i =0;i<nbrnoeud1;i++){
+       motor_D.stop();
+       motor_G.stop();
 
-          go = (int)sqrt((double)pow((listeCheminNouveau[i].x-positionrobot.x),2)+pow((listeCheminNouveau[i].y-positionrobot.y),2));
+       int posxenemi= distance*cos(angle);
+       int posyenemi= distance*sin(angle);
+       posEnemi(posxenemi,posyenemi);
+       nbrnoeud1=algoPAstar(table2020, arrive, positionrobot);
+       listeCheminNouveau[nbrnoeud1] = cheminRobot();
+       for(int i =0;i<nbrnoeud1;i++){
 
-          if(positionrobot.x!=listeCheminNouveau[i].x){
-            turndepart=(int)((float)atan((double)(((float)(listeCheminNouveau[i].y-positionrobot.y))/((float)(listeCheminNouveau[i].x-positionrobot.x))))*(float)180/pi);
-            if(positionrobot.x>listeCheminNouveau[i].x)turndepart+=360;
-            else turndepart+=180;
-            turndepart%=360;
-          }else{
-            if(positionrobot.y>listeCheminNouveau[i].y)turndepart=90;
-            else turndepart=270;
-                }
+         go = (int)sqrt((double)pow((listeCheminNouveau[i].x*20-positionrobot.x*20),2)+pow((listeCheminNouveau[i].y*20-positionrobot.y*20),2));
 
-                if(motor_D.isRunning()==false && motor_G.isRunning()==false){
-                  pas=(long)(coeficien_turn*(float)turndepart);//calcule du nombre de pas pour les roue sans le signe de la direction
+         if(positionrobot.x!=listeCheminNouveau[i].x){
+           turndepart=(int)((float)atan((double)(((float)(listeCheminNouveau[i].y*20-positionrobot.y*20))/((float)(listeCheminNouveau[i].x*20-positionrobot.x*20))))*(float)180/pi);
+           if(positionrobot.x>listeCheminNouveau[i].x)turndepart+=360;
+           else turndepart+=180;
+           turndepart%=360;
+         }else{
+           if(positionrobot.y>listeCheminNouveau[i].y)turndepart=90;
+           else turndepart=270;
+         }
 
-                  motor_D.move(pas);//activation de la rotation jusque cette valeur de pas moteur droite
-                  motor_G.move(pas);//activation de la rotation jusque cette valeur de pas moteur gauche
-                }
-                motor_D.run();//lancemant du moteur droit
-                motor_G.run();//lancemant du moteur gauche
-                if(motor_D.isRunning()==false && motor_G.isRunning()==false){
-                  pas=(long)(coeficien_go*(float)(go)); //calcule du nombre de pas pour les roue sans le signe de la direction
+         if(motor_D.isRunning()==false && motor_G.isRunning()==false){
+           pas=(long)(coeficien_turn*(float)turndepart);//calcule du nombre de pas pour les roue sans le signe de la direction
 
-                  motor_D.setCurrentPosition(0);
-                  motor_G.setCurrentPosition(0);
-                  motor_D.move(pas);//activation de la rotation jusque cette valeur de pas moteur droite
-                  motor_G.move(-pas);//activation de la rotation jusque cette valeur de pas moteur gauche
-                  motor_D.run();//lancemant du moteur droit
-                  motor_G.run();//lancemant du moteur gauche
-                }
-        }
+           motor_D.move(pas);//activation de la rotation jusque cette valeur de pas moteur droite
+           motor_G.move(pas);//activation de la rotation jusque cette valeur de pas moteur gauche
+         }
+         do{
+           motor_D.run();//lancemant du moteur droit
+           motor_G.run();//lancemant du moteur gauche
+         }while(motor_D.isRunning()==true && motor_G.isRunning()==true);
+
+         if(motor_D.isRunning()==false && motor_G.isRunning()==false){
+           pas=(long)(coeficien_go*(float)(go*5)); //calcule du nombre de pas pour les roue sans le signe de la direction
+
+           motor_D.setCurrentPosition(0);
+           motor_G.setCurrentPosition(0);
+           motor_D.setSpeed(speed);
+           motor_G.setSpeed(speed);
+           motor_D.move(pas);//activation de la rotation jusque cette valeur de pas moteur droite
+           motor_G.move(-pas);//activation de la rotation jusque cette valeur de pas moteur gauche
+           do{
+             motor_D.run();//lancemant du moteur droit
+             motor_G.run();//lancemant du moteur gauche
+           }while(motor_D.isRunning()==true && motor_G.isRunning()==true);
+         }
+       }
 
       }
     }
 
-  }
+  }else{lidar.startScan();}
 
   motor_D.run();//lancemant du moteur droit
   motor_G.run();//lancemant du moteur gauche

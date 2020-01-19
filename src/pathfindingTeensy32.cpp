@@ -27,7 +27,7 @@ float pente1;
 float pente2;
 float pente3;
 
-void initTable(){
+void initTable(uint8_t table[150][100]){
   //definition des tassots sur la table2020 et initialise le tableau
   for (int  i=93;i<100;i++){
     table[45][i]=1;
